@@ -1,0 +1,38 @@
+from app import db, User
+
+db.create_all()  # Создать таблицы
+
+# Пример создания пользователей
+admin = User(username='admin', password='admin', role='admin')
+user = User(username='user', password='user', role='user')
+
+db.session.add(admin)
+db.session.add(user)
+db.session.commit()  # Сохранить пользователей в базе данных
+
+
+7. Пример URL-адресов
+Главная страница: http://127.0.0.1:5000/
+Страница логина: http://127.0.0.1:5000/login
+Страница пользователя: http://127.0.0.1:5000/user
+Страница администратора: http://127.0.0.1:5000/admin (доступна только для администратора)
+Примечания
+Замените your_secret_key на секретный ключ для вашей конфигурации.
+Вы можете дополнительно улучшить безопасность приложения, используя хэширование паролей с помощью библиотеки werkzeug.security.
+Хэширование паролей
+Для улучшения безопасности паролей, вы можете использовать werkzeug.security для их хэширования и проверки.
+
+Пример хэширования паролей:
+
+
+
+
+from werkzeug.security import generate_password_hash, check_password_hash
+
+# Создание пользователей с хэшированными паролями
+admin = User(username='admin', password=generate_password_hash('admin'), role='admin')
+user = User(username='user', password=generate_password_hash('user'), role='user')
+
+
+
+

@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content" id="content">
+       
+    <!-- Spinner -->
+    <div class="spinner-container" id="spinner-container">
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Опрашиваем свитч...</span>
+        </div>
+    </div>
+  
+    <h3 class="text-center mt-3">Регистрация ону  {{device_name}} - {{device_ip}}</h3>
+    
+    <!-- Flash messages -->
+    <div id="flash-messages" class="text-center mb-3"></div>
+   
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form onsubmit="registerONU(event)">
+                <div class="form-group">
+                    <select required id="interface" name="interface" class="form-control" onchange="runScript()">
+                        <option value="" disabled selected>Интерфейс</option>
+                        {% for key, value in interfaces.items() %}
+                            <option  value="{{ key }}">{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="onu_id">Порядковый номер ону</label>
+                    <input required pattern="^(?:[1-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8])$"  type="text" id="onu_id" 
+                    name="onu_id" class="form-control" placeholder="1-128">
+                </div>
+                <div class="form-group">
+                    <select required id="speed" name="speed" class="form-control">
+                        <option value="" disabled selected>Профайл скорости</option>
+                        {% for key, value in speed_profiles.items() %}
+                            <option value="{{ key }}">{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <select required id="vlan" name="vlan" class="form-control">
+                        <option value="" disabled selected>Вилан</option>
+                        {% for key, value in line_profiles.items() %}
+                            <option value="{{ key }}+++{{ value }}">имя:{{ key }} id:{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="sn">SN</label>
+                    <input required pattern="^[A-Z0-9]{12}$" 
+                    type="text" id="sn" name="sn" class="form-control" placeholder="ZTEGC690F05D">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="comment" name="comment" class="form-control" placeholder="Комментарий">
+                </div>
+                <div class="form-group">
+                    <button type="submit" id="submit-button" class="btn btn-info btn-block">Зарегистрировать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    function toggleSidebar() {
+        var sidebar = document.getElementById('sidebar');
+        var content = document.getElementById('content');
+        sidebar.classList.toggle('active');
+        content.classList.toggle('shifted');
+    }
+
+    function runScript() {
+        const interface = document.getElementById('interface').value;
+        showSpinner();
+
+        fetch('/get-free-onu', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ interface })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            const onuIdInput = document.getElementById('onu_id');
+            onuIdInput.value = data.onuId; // Assuming 'onuId' is the field name returned from server
+            
+            // Display flash messages
+            const flashMessages = document.getElementById('flash-messages');
+            flashMessages.innerHTML = '';
+            data.messages.forEach(([category, message]) => {
+                const div = document.createElement('div');
+                div.className = `alert alert-${category} alert-dismissible fade show`;
+                div.innerHTML = `${message}<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>`;
+                flashMessages.appendChild(div);
+            });
+            
+            hideSpinner();
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            hideSpinner();
+        });
+    }
+
+    function registerONU(event) {
+        event.preventDefault(); // Prevent form from submitting the default way
+        
+        const interface = document.getElementById('interface').value;
+        const onuId = document.getElementById('onu_id').value;
+        const speed = document.getElementById('speed').value;
+        const vlan = document.getElementById('vlan').value;
+        const sn = document.getElementById('sn').value;
+        const comment = document.getElementById('comment').value;
+        
+        // Perform your registration logic here
+        console.log(`Registering ONU with Interface: ${interface}, ONU ID: ${onuId}, Speed: ${speed}, VLAN: ${vlan}, SN: ${sn}`);
+        
+        // Example of a fetch POST request for registration
+        showSpinner();
+        fetch('/register-onu', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ interface, onuId, speed, vlan, sn ,comment})
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Registration Success:', data);
+            // Display flash messages or handle success message
+            const flashMessages = document.getElementById('flash-messages');
+            flashMessages.innerHTML = '';
+            data.messages.forEach(([category, message]) => {
+                const div = document.createElement('div');
+                div.className = `alert alert-${category} alert-dismissible fade show`;
+                div.innerHTML = `${message}<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>`;
+                flashMessages.appendChild(div);
+            });
+
+            // Clear form fields
+            document.getElementById('interface').selectedIndex = 0;
+            document.getElementById('onu_id').value = '';
+            document.getElementById('speed').selectedIndex = 0;
+            document.getElementById('vlan').selectedIndex = 0;
+            document.getElementById('sn').value = '';
+            document.getElementById('comment').value = '';
+
+            hideSpinner();
+        })
+        .catch((error) => {
+            console.error('Registration Error:', error);
+            // Display flash messages or handle error message
+            const flashMessages = document.getElementById('flash-messages');
+            flashMessages.innerHTML = `<div class="alert alert-danger alert-dismissible fade show">
+                Ошибка регистрации: ${error.message}<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>`;
+
+            hideSpinner();
+        });
+    }
+
+    function showSpinner() {
+        document.getElementById('spinner-container').classList.add('active');
+    }
+
+    function hideSpinner() {
+        document.getElementById('spinner-container').classList.remove('active');
+    }
+</script>
+
+<style>
+    .spinner-container {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
+    .spinner-container.active {
+        display: flex;
+    }
+</style>
+{% endblock %}

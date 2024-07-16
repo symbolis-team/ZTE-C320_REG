@@ -1,0 +1,32 @@
+sw:
+  name: "ZTE"
+  version: "1.2"
+  ip: "172.16.1.200"
+  login: "admin"
+  passwd: "admin"
+  interfaces:
+      gpon-olt_1/2/1: "gpon-olt_1/2/1"
+      gpon-olt_1/2/2: "gpon-olt_1/2/2"
+      gpon-olt_1/2/3: "gpon-olt_1/2/3"
+      gpon-olt_1/2/4: "gpon-olt_1/2/4"
+      gpon-olt_1/2/5: "gpon-olt_1/2/5"
+      gpon-olt_1/2/6: "gpon-olt_1/2/6"
+      gpon-olt_1/2/7: "gpon-olt_1/2/7"
+      gpon-olt_1/2/8: "gpon-olt_1/2/8"     
+  speed_profiles:
+      50mb: "50mb"
+      100mb: "100mb"
+      500mb: "500mb"
+      1000mb: "1000mb"
+  line_profiles:
+      rip: 200
+      onu1: 1001
+      onu2: 1002   
+  commands:
+      terminal_length: "terminal length 0"
+      conf_t: "conf t"
+      show_gpon_onu_uncfg: "show gpon onu uncfg"
+      gpon_onu: "show running-config interface gpon-onu_"
+      gpon_olt: "show running-config interface gpon-olt_"
+
+

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h3 class="mt-5 text-center">Логи</h3>
+    <div class="scrollable-div">
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Level</th>
+                <th>IP</th>
+                <th>Timestamp</th>
+                <th>Message</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in data %}
+            <tr>
+                <td class="log-level-{{ entry.level|lower }}">{{ entry.level }}</td>
+                <td>{{ entry.ip }}</td>
+                <td>{{ entry.timestamp }}</td>
+                <td>{{ entry.request }}</td>
+                <td>{{ entry.status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</div>
+{% endblock %}
