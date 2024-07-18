@@ -2,8 +2,8 @@ sw:
   name: "ZTE"
   version: "1.2"
   ip: "172.16.1.200"
-  login: "master"
-  passwd: "rjvjhf"
+  login: "admin"
+  passwd: "admin"
   interfaces:
       gpon-olt_1/2/1: "gpon-olt_1/2/1"
       gpon-olt_1/2/2: "gpon-olt_1/2/2"
