@@ -1,6 +1,9 @@
 import os
 import re
 from flask import Flask, render_template, redirect, url_for, flash, request, session, jsonify, get_flashed_messages, g
+from flask_socketio import SocketIO, emit
+import subprocess
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_principal import Principal, Permission, RoleNeed, identity_loaded, UserNeed, Identity, AnonymousIdentity, identity_changed
@@ -11,8 +14,13 @@ from config import Config, get_config
 from models import db, User
 from main import free_onu as onu_id
 from main import registr_onu as rg
+from main import get_uncf_onu as uncf_onu
 
 app = Flask(__name__)
+CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
+# Define the directory where commands will be executed
+WORKING_DIRECTORY = "/home/maestro/your/help2/shell"
 app.config.from_object(Config)
 
 db.init_app(app)
@@ -106,13 +114,60 @@ def inject_identity():
     return dict(current_identity=g.identity if hasattr(g, 'identity') else None)
 
 
+
+@socketio.on('execute_command')
+def handle_command(command):
+    try:
+        # Ensure the working directory exists and has the right permissions
+        if not os.path.exists(WORKING_DIRECTORY):
+            os.makedirs(WORKING_DIRECTORY)
+
+        # Проверка команд на допустимость
+        allowed_commands = ['ls', 'cat', 'echo','pwd','arp',
+                            'ip','ping','traceroute','nslookup','dig','netstat','tracepath']  # Допустимые команды
+        command_name = command.split()[0]
+       
+        if command_name not in allowed_commands:
+            raise ValueError("Команда не разрешена")
+
+        result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT, text=True, cwd=WORKING_DIRECTORY)
+    except subprocess.CalledProcessError as e:
+        result = e.output
+    except Exception as e:
+        result = str(e)
+    emit('command_result', result)
+    
+
+
+@app.route('/inconsole')
+@login_required
+def inconsole():
+    return render_template('inconsole.html')
+
+
+@app.route('/show-uncg-onu')
+@login_required
+def show_uncf_onu():
+
+    return render_template('get_uncf_onu.html')
+
+@app.route('/get-uncf-onu', methods=['POST'])
+def get_uncf_onu():
+    onu_uncf_list = uncf_onu()
+   
+    return jsonify({"data": onu_uncf_list})
+
+
+
 @app.route('/logs')
+@login_required
 def logs():
     data = read_log(log_file_path)
     return render_template('logs.html', data=data)
 
+
 @app.route('/')
-# @login_required
+@login_required
 def index():
     return render_template('index.html')
 
@@ -125,11 +180,11 @@ def login():
         if user and check_password_hash(user.password, password):
             login_user(user)
             identity_changed.send(app, identity=Identity(user.id))
-            logger.info(f'Пользователь {username} успешно залогинился')
+            logger.info(f"Користувач {username} успішно залогінився")
             return redirect(url_for('index'))
         else:
-            flash('Логин неуспешный. Пожалуйста, проверьте имя пользователя и пароль', 'danger')
-            logger.warning(f'Неудачная попытка входа по имени пользователя: {username}')
+            flash("Хибна спроба. Будь ласка, перевірте ім'я користувача та пароль", "danger")
+            logger.warning(f"Невдала спроба входу на ім'я користувача: {username}")
     return render_template('login.html')
 
 @app.route('/logout')
@@ -140,7 +195,7 @@ def logout():
     for key in ('identity.name', 'identity.auth_type'):
         session.pop(key, None)
     identity_changed.send(app, identity=AnonymousIdentity())
-    logger.info(f'Пользователь {username} разлогинился')
+    logger.info(f'Користувач {username} розлогінився')
     return redirect(url_for('login'))
 
 
@@ -166,7 +221,7 @@ def run_script():
     interface = data['interface']
     free_onu_id = onu_id(interface)
     
-    flash(f"Свободный ONU ID для интерфейса {interface}: {free_onu_id}", 'success')
+    flash(f"Вільний ONU ID для інтерфейсу {interface}: {free_onu_id}", 'success')
     
     messages = get_flashed_messages(with_categories=True)
     return jsonify({"onuId": free_onu_id, "messages": messages})
@@ -193,7 +248,7 @@ def register_onu():
         reg_onu = rg(interface,onu_id,sn,speed,vlan_name,vlan_id,comment)
         
         
-        flash(f"ONU SN:{sn} на место: {interface}:{onu_id} успешно зарегестрирована", 'success')
+        flash(f"ONU SN:{sn} на місце: {interface}:{onu_id} успішно зареєстровано", 'success')
         messages = get_flashed_messages(with_categories=True)
         return jsonify({"messages": messages}), 200
 
@@ -203,9 +258,10 @@ def register_onu():
             'message': str(e)
         }
 
-        flash(f"ОШИБКА {response}", 'danger')
+        flash(f"ПОМИЛКА {response}", 'danger')
         messages = get_flashed_messages(with_categories=True)
         return jsonify({"response": response, "messages": messages}), 400
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    socketio.run(app, host='127.0.0.1', port=5000, debug=True)
+    # app.run(debug=True)

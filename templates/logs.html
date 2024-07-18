@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
-    <h3 class="mt-5 text-center">Логи</h3>
+    <h3 class="mt-5 text-center">Логі</h3>
     <div class="scrollable-div">
     <table class="table table-striped mt-3">
         <thead>
-            <tr>
+            <tr class="text-black">
                 <th>Level</th>
                 <th>IP</th>
                 <th>Timestamp</th>
@@ -15,7 +15,7 @@
         </thead>
         <tbody>
             {% for entry in data %}
-            <tr>
+            <tr class="text-black">
                 <td class="log-level-{{ entry.level|lower }}">{{ entry.level }}</td>
                 <td>{{ entry.ip }}</td>
                 <td>{{ entry.timestamp }}</td>

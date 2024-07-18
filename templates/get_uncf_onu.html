@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content" id="content">
+
+    <!-- Спінер -->
+    <div class="spinner-container" id="spinner-container">
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Опитуємо свитч...</span>
+        </div>
+    </div>
+
+    <h3 class="text-center mt-3">Незареєстровані ONU {{device_name}} - {{device_ip}}</h3>
+    
+    <!-- Flash повідомлення -->
+    <div id="flash-messages" class="text-center mb-3"></div>
+   
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <button class="btn-console mb-3 btn-fetch" onclick="fetchUncfOnu()">Запитати незареєстровані ONU</button>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <pre id="uncf-onu-console" class="retro-console p-3" 
+            style="max-height: 400px; overflow-y: scroll; border-radius: 0.25rem;width:100%;"></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    const typingDelay = 200; // Затримка між символами в мілісекундах
+    let consoleElement;
+
+    function fetchUncfOnu() {
+        showSpinner();
+        
+        fetch('/get-uncf-onu', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            consoleElement = document.getElementById('uncf-onu-console');
+            const lines = formatConsoleOutput(data.data);
+            consoleElement.innerHTML = ''; // Очистити попередній вміст
+            simulateConsole(lines, 0);
+            hideSpinner();
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            hideSpinner();
+        });
+    }
+
+    function formatConsoleOutput(data) {
+        const lines = data.split('\r\n');
+        let captureOutput = false;
+        let formattedLines = [];
+
+        lines.forEach(line => {
+            if (line.includes('show gpon onu uncfg')) {
+                captureOutput = true; // Починаємо захоплювати вивід після команди
+                return; // Пропускаємо саму команду
+            }
+            if (captureOutput) {
+                if (line.includes('%Code 32310-GPONSRV')) {
+                    formattedLines.push(`<div class="info">${line}</div>`);
+                } else {
+                    const snMatch = line.match(/([A-Z0-9]{12})/); // Регулярний вираз для серійного номера
+                    if (snMatch) {
+                        const sn = snMatch[0];
+                        formattedLines.push(`<div class="line d-flex justify-content-between align-items-center">${line}<button class="btn btn-sm btn-success ml-2" onclick="copyToClipboard('${sn}')">Скопіювати</button></div>`);
+                    } else {
+                        formattedLines.push(`<div class="line d-flex justify-content-between align-items-center">${line}</div>`);
+                    }
+                }
+            }
+        });
+
+        return formattedLines;
+    }
+
+    function simulateConsole(lines, index) {
+        if (index < lines.length) {
+            consoleElement.innerHTML += lines[index] + '\n';
+            consoleElement.scrollTop = consoleElement.scrollHeight; // Прокручуємо вниз, щоб показати останній вивід
+            setTimeout(() => {
+                simulateConsole(lines, index + 1);
+            }, typingDelay);
+        }
+    }
+
+    function copyToClipboard(text) {
+        const tempInput = document.createElement('input');
+        tempInput.style.position = 'absolute';
+        tempInput.style.left = '-9999px';
+        tempInput.value = text;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        alert('Серійний номер скопійовано: ' + text);
+    }
+
+    function showSpinner() {
+        document.getElementById('spinner-container').classList.add('active');
+    }
+
+    function hideSpinner() {
+        document.getElementById('spinner-container').classList.remove('active');
+    }
+</script>
+
+
+{% endblock %}

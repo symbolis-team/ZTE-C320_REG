@@ -3,16 +3,16 @@
 {% block content %}
 <div class="content" id="content">
        
-    <!-- Spinner -->
+    <!-- Спінер -->
     <div class="spinner-container" id="spinner-container">
         <div class="spinner-border" role="status">
-            <span class="sr-only">Опрашиваем свитч...</span>
+            <span class="sr-only">Опитуємо свитч...</span>
         </div>
     </div>
   
-    <h3 class="text-center mt-3">Регистрация ону  {{device_name}} - {{device_ip}}</h3>
+    <h3 class="text-center mt-3">Реєстрація ону  {{device_name}} - {{device_ip}}</h3>
     
-    <!-- Flash messages -->
+    <!-- Flash повідомлення -->
     <div id="flash-messages" class="text-center mb-3"></div>
    
     <div class="row justify-content-center">
@@ -20,20 +20,20 @@
             <form onsubmit="registerONU(event)">
                 <div class="form-group">
                     <select required id="interface" name="interface" class="form-control" onchange="runScript()">
-                        <option value="" disabled selected>Интерфейс</option>
+                        <option value="" disabled selected>Інтерфейс</option>
                         {% for key, value in interfaces.items() %}
-                            <option  value="{{ key }}">{{ value }}</option>
+                            <option value="{{ key }}">{{ value }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="onu_id">Порядковый номер ону</label>
-                    <input required pattern="^(?:[1-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8])$"  type="text" id="onu_id" 
+                    <label for="onu_id" class="text-black">Порядковий номер ону</label>
+                    <input required pattern="^(?:[1-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8])$" type="text" id="onu_id" 
                     name="onu_id" class="form-control" placeholder="1-128">
                 </div>
                 <div class="form-group">
                     <select required id="speed" name="speed" class="form-control">
-                        <option value="" disabled selected>Профайл скорости</option>
+                        <option value="" disabled selected>Профайл швидкості</option>
                         {% for key, value in speed_profiles.items() %}
                             <option value="{{ key }}">{{ value }}</option>
                         {% endfor %}
@@ -41,35 +41,26 @@
                 </div>
                 <div class="form-group">
                     <select required id="vlan" name="vlan" class="form-control">
-                        <option value="" disabled selected>Вилан</option>
+                        <option value="" disabled selected>Вілан</option>
                         {% for key, value in line_profiles.items() %}
-                            <option value="{{ key }}+++{{ value }}">имя:{{ key }} id:{{ value }}</option>
+                            <option value="{{ key }}+++{{ value }}">{{ value }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="sn">SN</label>
-                    <input required pattern="^[A-Z0-9]{12}$" 
-                    type="text" id="sn" name="sn" class="form-control" placeholder="ZTEGC690F05D">
+                    <label for="sn" class="text-black">SN</label>
+                    <input required pattern="^[A-Z0-9]{12}$" type="text" id="sn" name="sn" class="form-control" placeholder="ZTEGC690F05D">
                 </div>
                 <div class="form-group">
-                    <input type="text" id="comment" name="comment" class="form-control" placeholder="Комментарий">
+                    <input type="text" id="comment" name="comment" class="form-control" placeholder="Коментар">
                 </div>
                 <div class="form-group">
-                    <button type="submit" id="submit-button" class="btn btn-info btn-block">Зарегистрировать</button>
+                    <button type="submit" id="submit-button" class="btn-console btn-block">Зареєструвати</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
-<!-- Bootstrap CSS -->
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-
-<!-- Bootstrap JS and dependencies -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 <script>
     function toggleSidebar() {
@@ -134,7 +125,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ interface, onuId, speed, vlan, sn ,comment})
+            body: JSON.stringify({ interface, onuId, speed, vlan, sn, comment })
         })
         .then(response => response.json())
         .then(data => {
@@ -164,7 +155,7 @@
             // Display flash messages or handle error message
             const flashMessages = document.getElementById('flash-messages');
             flashMessages.innerHTML = `<div class="alert alert-danger alert-dismissible fade show">
-                Ошибка регистрации: ${error.message}<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                Помилка реєстрації: ${error.message}<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>`;
 
             hideSpinner();
@@ -180,15 +171,4 @@
     }
 </script>
 
-<style>
-    .spinner-container {
-        display: none;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-    }
-    .spinner-container.active {
-        display: flex;
-    }
-</style>
 {% endblock %}

@@ -38,6 +38,13 @@ def registr_onu(port_name, free_onu_id, sn_onu, speed_onu, vlan_name, vlan_id, c
       "end","wr"
      ])
     
+# вытягиваем список не законфиженых ону
+def get_uncf_onu():
+     uncf_onu_list = device(ip, 1, login, passwd, [ "terminal length 0","show gpon onu uncfg"])
+     res = uncf_onu_list.get_result()
+     return res    
+    
+    
 
 
 

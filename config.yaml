@@ -2,8 +2,8 @@ sw:
   name: "ZTE"
   version: "1.2"
   ip: "172.16.1.200"
-  login: "admin"
-  passwd: "admin"
+  login: "master"
+  passwd: "rjvjhf"
   interfaces:
       gpon-olt_1/2/1: "gpon-olt_1/2/1"
       gpon-olt_1/2/2: "gpon-olt_1/2/2"
@@ -21,7 +21,14 @@ sw:
   line_profiles:
       rip: 200
       onu1: 1001
-      onu2: 1002   
+      onu2: 1002
+      onu3: 1003
+      onu4: 1004
+      onu5: 1005
+      onu6: 1006
+      onu7: 1007
+      onu8: 1008
+      onu9: 1009
   commands:
       terminal_length: "terminal length 0"
       conf_t: "conf t"
